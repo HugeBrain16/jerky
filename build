@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+CC=""
+if command -v ccache >/dev/null 2>&1; then
+    CC="ccache "
+fi
+CC="$CC i686-w64-mingw32-gcc"
+
+CFLAGS="-std=gnu99 -O3 -g -Wall -Wextra -Wno-strict-aliasing -Wno-unused-parameter"
+
+DIR="$(mktemp -t sh3-jerky.XXXX -d)"
+GCC="$(i686-w64-mingw32-gcc -dumpversion)"
+
+compile() {
+    echo "Compiling $1..."
+    out=$(echo "$1" | sed 's|^src/||; s|\.c$|.o|')
+    mkdir -p $(dirname "$DIR/$out")
+    $CC -c $1 -Iinclude -o $DIR/$out $CFLAGS
+    OBJECTS="$OBJECTS $DIR/$out"
+}
+
+for jerkysrc in $(find src -name "*.c"); do
+    compile $jerkysrc;
+done
+
+echo "Objects ($OBJECTS )"
+echo "Linking..."
+$CC -shared -o jerky.asi \
+    $CFLAGS $OBJECTS -static-libgcc
+
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+echo "Done! cleanup..."
+rm -r $DIR
