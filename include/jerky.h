@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define JERKY_VERSION "1.0"
+#define JERKY_VERSION "1.1"
 #define JERKY_DEBUG
 
 #define JERKY_OFF_HP 0x498660
