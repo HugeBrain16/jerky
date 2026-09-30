@@ -1,6 +1,6 @@
 # Silent Hill 3 - jerky.asi
 
-Makes beef jerky usable as heal item. Due to a current limitation, the item will still function like normal.
+Makes beef jerky usable as heal item.
 
 *Requires [**Ultimate ASI Loader**](https://github.com/ThirteenAG/Ultimate-ASI-Loader)
 
