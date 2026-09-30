@@ -6,6 +6,9 @@ uintptr_t jerky_addr = 0;
 FILE *jerky_log = NULL;
 char jerky_path[MAX_PATH] = {0};
 func1_t __use_item;
+func1_t __use_heal;
+func2_t __get_attr;
+func3_t __add_hp;
 
 static void jlog(const char *msg, ...) {
     if (!jerky_log) return;
@@ -18,20 +21,38 @@ static void jlog(const char *msg, ...) {
     fflush(jerky_log);
 }
 
-static int use_item_callback(int id) {
+static uint32_t get_attr_callback(int id) {
+    uint32_t attr = __get_attr(id);
+
+    if (id == JERKY_ID_ITEM) {
+        attr &= ~0x0001; // clear normal use
+        attr |= 0x1000; // set heal use
+    }
+
+    return attr;
+}
+
+static int use_heal_callback(int id) {
     #ifdef JERKY_DEBUG
-        jlog("Item used: %d\n", id);
+        jlog("Item used heal: %d\n", id);
     #endif
 
     if (id == JERKY_ID_ITEM) {
-        float *hp = (float*)(jerky_addr + JERKY_OFF_HP);
-        float old = *hp;
-        *hp = min(old + 2.0, 100.0);
-
-        #ifdef JERKY_DEBUG
-            jlog("Healed: %f -> %f\n", old, *hp);
-        #endif
+        __add_hp(2.0, id);
+        __use_item(id);
+        return 1;
     }
+
+    return __use_heal(id);
+}
+
+static int use_item_callback(int id) {
+    #ifdef JERKY_DEBUG
+        jlog("Item used generic: %d\n", id);
+    #endif
+
+    if (id == JERKY_ID_ITEM)
+        __add_hp(2.0, id);
 
     return __use_item(id);
 }
@@ -59,8 +80,16 @@ DWORD WINAPI Main(LPVOID hModule) {
         jlog("Addr: 0x%08x\n", jerky_addr);
     #endif
 
+    if (MH_CreateHook((LPVOID)(jerky_addr + 0x1eb210), (LPVOID)get_attr_callback, (LPVOID*)&__get_attr) == MH_OK)
+        MH_EnableHook((LPVOID)(jerky_addr + 0x1eb210));
+
     if (MH_CreateHook((LPVOID)(jerky_addr + 0x96a20), (LPVOID)use_item_callback, (LPVOID*)&__use_item) == MH_OK)
         MH_EnableHook((LPVOID)(jerky_addr + 0x96a20));
+
+    if (MH_CreateHook((LPVOID)(jerky_addr + 0x97500), (LPVOID)use_heal_callback, (LPVOID*)&__use_heal) == MH_OK)
+        MH_EnableHook((LPVOID)(jerky_addr + 0x97500));
+
+    __add_hp = (func3_t)(jerky_addr + 0x6e850);
 
     return 0;
 }
