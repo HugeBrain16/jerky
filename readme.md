@@ -14,3 +14,11 @@ Installation:
 
 1. Create scripts folder in `Silent Hill 3\scripts`
 2. Move jerky.asi into scripts
+  
+Config is loaded from file "Silent Hill 3\scripts\jerky.cfg".
+
+- `heal = <number>`
+amount of hp to add
+
+- `preserve_behavior = <bool>`
+keep original behavior of placing down the item while also adding hp
